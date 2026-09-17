@@ -284,8 +284,9 @@ coalguardai/
 | **Web Typecheck** | **PASS** | `npm run typecheck --workspace=apps/web` | TypeScript 5.5, 0 errors |
 | **Mobile Typecheck** | **PASS** | `npm run typecheck --workspace=apps/mobile` | TypeScript 5.5, 0 errors |
 | **Web Linter** | **PASS** | `npm run lint --workspace=apps/web` | Next.js ESLint, 0 warnings/errors |
-| **Web Unit & Contract Tests** | **PASS** | `npm run test --workspace=apps/web` | **92 unit & API contract tests passed** |
-| **Mobile Offline Queue Tests** | **PASS** | `npm run test --workspace=apps/mobile` | **15 offline state machine tests passed** |
+| **Web Unit & Contract Tests** | **PASS** | `npm run test --workspace=apps/web` | **97/97 tests passed** (11 test suites) |
+| **Mobile Offline Queue Tests** | **PASS** | `npm run test --workspace=apps/mobile` | **15/15 tests passed** (1 test suite) |
+| **Total Automated Tests** | **PASS** | `npm test` | **112/112 tests passed** (100% pass rate, 0 skipped) |
 | **Production Web Build** | **PASS** | `npm run build --workspace=apps/web` | **25 static/dynamic pages + 30 API routes compiled** |
 
 ---
