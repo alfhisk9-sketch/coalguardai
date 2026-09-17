@@ -33,7 +33,7 @@ import {
   persistMineSummary,
 } from "./persistence";
 
-export const GEMINI_MODEL_VERSION = "gemini-2.5-flash";
+export const GEMINI_MODEL_VERSION = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
 export class GeminiAIService implements AIService {
   private ai: GoogleGenAI | null = null;
@@ -58,15 +58,32 @@ export class GeminiAIService implements AIService {
   private async callGeminiJson<T>(prompt: string, schema: { parse: (val: unknown) => T }): Promise<T | null> {
     if (!this.ai) return null;
     try {
-      const response = await this.ai.models.generateContent({
-        model: GEMINI_MODEL_VERSION,
-        contents: prompt,
-        config: {
-          systemInstruction: CORE_SYSTEM_SECURITY_INSTRUCTIONS,
-          responseMimeType: "application/json",
-          temperature: 0.2, // low temperature for analytical determinism
-        },
-      });
+      let response;
+      try {
+        response = await this.ai.models.generateContent({
+          model: GEMINI_MODEL_VERSION,
+          contents: prompt,
+          config: {
+            systemInstruction: CORE_SYSTEM_SECURITY_INSTRUCTIONS,
+            responseMimeType: "application/json",
+            temperature: 0.2, // low temperature for analytical determinism
+          },
+        });
+      } catch (err: any) {
+        if (err?.message?.includes("gemini-3.6-flash") || err?.status === 404) {
+          response = await this.ai.models.generateContent({
+            model: "gemini-3.6-flash",
+            contents: prompt,
+            config: {
+              systemInstruction: CORE_SYSTEM_SECURITY_INSTRUCTIONS,
+              responseMimeType: "application/json",
+              temperature: 0.2,
+            },
+          });
+        } else {
+          throw err;
+        }
+      }
 
       const rawText = response.text?.trim() ?? "";
       if (!rawText) return null;
