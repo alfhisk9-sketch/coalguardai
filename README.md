@@ -224,10 +224,134 @@ Record Observation
     ↓
 Attach Evidence
     ↓
-Store Locally
+Store Locally (AsyncStorage)
     ↓
 Network Available
     ↓
-Sync Queue
+Sync Queue (Idempotent clientOperationId)
     ↓
-Server
+Supabase Server
+```
+
+---
+
+# 🔑 Demo Account Credentials & Scope
+
+All six named demonstration personas are provisioned with real-world mining scopes:
+
+| Persona | Role Key | Email Address | Operational Scope |
+|---|---|---|---|
+| **Alfhi** | `SUPER_ADMIN` | `alfhi.demo@sih26024.test` | Organization-wide (All 4 Mines, Audit Logs, Settings) |
+| **Rabbani** | `CORPORATE_ADMIN` | `rabbani.demo@sih26024.test` | Corporate Governance (Multi-Mine Oversight, Compliance) |
+| **Akshay** | `MINE_MANAGER` | `akshay.demo@sih26024.test` | Scoped to **Shakti Open Cast Mine** (`SHK-DEMO`) |
+| **Krishna** | `INSPECTOR` | `krishna.demo@sih26024.test` | Field Safety & Statutory Inspections |
+| **Koushik** | `CONTRACTOR` | `koushik.demo@sih26024.test` | Scoped to **Alpha Mining Services** (`REG-DEMO-001`) |
+| **Hema** | `REGULATOR` | `hema.demo@sih26024.test` | Statutory Regulatory Oversight (DGMS / SPCB Returns) |
+
+> **Universal Password:** `demo123`  
+> Evaluators may also use the **One-Click Demo Workspace Persona Selector** on the web login screen for instant role switching without typing.
+
+---
+
+# 🏗️ Monorepo Architecture
+
+```
+coalguardai/
+├── apps/
+│   ├── web/                    # Next.js 14 App Router web platform
+│   │   ├── app/                # Pages & Server Route Handlers (/api/*)
+│   │   ├── components/         # UI Design System, GIS Leaflet map, Dashboards
+│   │   └── lib/                # Supabase SSR client, Gemini AI engine, auth context
+│   └── mobile/                 # Expo (React Native) cross-platform mobile app
+│       ├── src/                # Offline queue state machine, GPS capture, screens
+│       └── tests/              # Offline transition & idempotency unit tests
+├── packages/
+│   ├── types/                  # Shared TypeScript domain contracts & DTOs
+│   ├── validation/             # Shared Zod validation schemas
+│   └── config/                 # Roles, permissions, constants, and locale dictionaries
+├── supabase/
+│   └── migrations/             # 11 PostgreSQL schema migrations with RLS policies
+├── scripts/                    # Idempotent database seeding & verification utilities
+└── docs/                       # Architectural specifications, AI security, API specs
+```
+
+---
+
+# 🧪 Verified Quality Gates
+
+| Gate | Status | Command | Details |
+|---|:---:|---|---|
+| **Web Typecheck** | **PASS** | `npm run typecheck --workspace=apps/web` | TypeScript 5.5, 0 errors |
+| **Mobile Typecheck** | **PASS** | `npm run typecheck --workspace=apps/mobile` | TypeScript 5.5, 0 errors |
+| **Web Linter** | **PASS** | `npm run lint --workspace=apps/web` | Next.js ESLint, 0 warnings/errors |
+| **Web Unit & Contract Tests** | **PASS** | `npm run test --workspace=apps/web` | **92 unit & API contract tests passed** |
+| **Mobile Offline Queue Tests** | **PASS** | `npm run test --workspace=apps/mobile` | **15 offline state machine tests passed** |
+| **Production Web Build** | **PASS** | `npm run build --workspace=apps/web` | **25 static/dynamic pages + 30 API routes compiled** |
+
+---
+
+# ⚡ Quickstart Guide
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) v20.x or later
+- npm v10.x or later
+
+### 1. Clone & Install Dependencies
+```bash
+git clone https://github.com/alfhisk9-sketch/coalguardai.git
+cd coalguardai
+npm install
+```
+
+### 2. Configure Environment Variables
+Copy the template configuration:
+```bash
+cp .env.example apps/web/.env.local
+```
+
+Populate keys in `apps/web/.env.local`:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_ENABLED=true
+NEXT_PUBLIC_DEMO_MODE=true
+```
+
+### 3. Run Automated Tests & Verifications
+```bash
+# Run web contract & AI integration tests
+npm run test --workspace=apps/web
+
+# Run mobile offline queue resilience tests
+npm run test --workspace=apps/mobile
+```
+
+### 4. Launch Development Servers
+
+#### Web Application (Next.js)
+```bash
+npm run dev --workspace=apps/web
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+#### Mobile Field Application (Expo)
+```bash
+npm run start --workspace=apps/mobile
+```
+Scan the QR code via Expo Go on Android/iOS.
+
+---
+
+# 👥 Team Attribution
+
+Developed with pride for **Smart India Hackathon 2024 / 2026 (SIH26024)**  
+**Team Personas & Engineering Leads:**  
+- **Alfhi** — *System Architecture & Full-Stack Integration*
+- **Rabbani** — *Frontend Engineering & Mobile Client*
+- **Akshay** — *Mine Operations & Statutory Compliance Workflow*
+- **Krishna** — *Field Safety & Inspection Framework*
+- **Koushik** — *Contractor Management & Security*
+- **Hema** — *Regulatory Affairs & Environmental Analytics*
+
