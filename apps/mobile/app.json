@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "CoalGuard Field",
+    "slug": "coalguard-field",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"],
+    "ios": { "supportsTablet": true, "bundleIdentifier": "ai.coalguard.field" },
+    "android": { "package": "ai.coalguard.field" },
+    "plugins": [
+      ["expo-location", { "locationAlwaysAndWhenInUsePermission": "CoalGuard Field records the location of inspections, observations, incidents and attendance." }],
+      ["expo-camera", { "cameraPermission": "CoalGuard Field uses the camera to attach photo evidence to field records." }]
+    ],
+    "extra": {
+      "supabaseUrl": "",
+      "supabaseAnonKey": "",
+      "apiBaseUrl": ""
+    }
+  }
+}
