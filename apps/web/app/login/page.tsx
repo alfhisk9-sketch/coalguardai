@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, Sparkles } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import type { RoleKey } from "@sih/config";
 import { ROLE_KEYS } from "@sih/config";
 import { getSupabaseBrowserClient } from "../../lib/supabase-browser";
@@ -15,6 +15,7 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Select } from "../../components/ui/select";
 import { LanguageSelector } from "../../components/shell/language-selector";
+import { CoalGuardIcon } from "../../components/shell/brand-logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -70,16 +71,16 @@ export default function LoginPage() {
         </div>
 
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
-          <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">CG</span>
-          <h1 className="text-lg font-semibold tracking-tight">{t("app_title")}</h1>
+          <CoalGuardIcon className="h-12 w-12 drop-shadow-md" ariaHidden={false} />
+          <h1 className="text-lg font-bold tracking-tight text-foreground">{t("app_title")}</h1>
           <p className="text-xs text-muted-foreground">{t("app_subtitle")}</p>
-          <p className="text-[11px] font-medium text-primary">{t("ministry_label")}</p>
+          <p className="text-[11px] font-semibold text-primary">{t("ministry_label")}</p>
         </div>
 
-        <Card>
+        <Card className="border-border shadow-md">
           <CardHeader>
             <CardTitle>{t("sign_in")}</CardTitle>
-            <CardDescription>Use your issued operational account.</CardDescription>
+            <CardDescription>{t("login_card_desc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignIn} className="space-y-3" noValidate>
@@ -96,7 +97,7 @@ export default function LoginPage() {
                   {error}
                 </p>
               ) : null}
-              <Button type="submit" className="w-full" disabled={submitting}>
+              <Button type="submit" className="w-full font-semibold shadow-sm" disabled={submitting}>
                 {submitting ? t("signing_in") : t("sign_in")}
               </Button>
             </form>
@@ -104,8 +105,8 @@ export default function LoginPage() {
             {DEMO_MODE ? (
               <div className="mt-5 space-y-3 border-t border-border pt-4">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <ShieldCheck className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                  {t("demo_mode_badge")}
+                  <ShieldCheck className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+                  <span>{t("demo_mode_badge")}</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -133,7 +134,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button type="button" variant="outline" className="w-full text-xs" onClick={handleDemoEntry}>
+                  <Button type="button" variant="outline" className="w-full text-xs font-medium" onClick={handleDemoEntry}>
                     {t("enter_demo_workspace")}
                   </Button>
                 </div>

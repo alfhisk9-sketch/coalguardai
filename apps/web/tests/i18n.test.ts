@@ -8,7 +8,7 @@ import {
 } from "@sih/config";
 import { NAMED_DEMO_ACCOUNTS, buildDemoAuthContext } from "../lib/auth/demo";
 
-describe("Language Support (i18n) — English, Hindi, Telugu", () => {
+describe("Language Support (i18n) — English, Hindi, Telugu Parity", () => {
   it("supports exactly en, hi, and te with valid labels", () => {
     const codes = SUPPORTED_LOCALES.map((l) => l.code);
     expect(codes).toContain("en");
@@ -17,47 +17,104 @@ describe("Language Support (i18n) — English, Hindi, Telugu", () => {
     expect(SUPPORTED_LOCALES.length).toBe(3);
   });
 
-  it("has translations for all required navigation and role keys in en, hi, and te", () => {
-    const requiredKeys: TranslationKey[] = [
-      "nav_dashboard",
-      "nav_mines",
-      "nav_compliance",
-      "nav_inspections",
-      "nav_corrective_actions",
-      "nav_incidents",
-      "nav_contractors",
-      "nav_reports",
-      "nav_assistant",
-      "role_super_admin",
-      "role_corporate_admin",
-      "role_mine_manager",
-      "role_inspector",
-      "role_contractor",
-      "role_regulator",
-      "field_workspace",
-      "sync_status",
-      "btn_sync",
-    ];
+  it("guarantees 100% key parity: every key in English exists in Hindi and Telugu", () => {
+    const enKeys = Object.keys(TRANSLATIONS.en) as TranslationKey[];
+    const hiKeys = Object.keys(TRANSLATIONS.hi) as TranslationKey[];
+    const teKeys = Object.keys(TRANSLATIONS.te) as TranslationKey[];
 
-    const locales: Locale[] = ["en", "hi", "te"];
-    for (const loc of locales) {
-      for (const key of requiredKeys) {
-        const val = getTranslation(key, loc);
-        expect(val).toBeDefined();
-        expect(val.length).toBeGreaterThan(0);
-        expect(val).toBe(TRANSLATIONS[loc][key]);
-      }
+    expect(enKeys.length).toBeGreaterThanOrEqual(100);
+    expect(hiKeys.length).toBe(enKeys.length);
+    expect(teKeys.length).toBe(enKeys.length);
+
+    for (const key of enKeys) {
+      expect(TRANSLATIONS.hi[key], `Missing Hindi translation for key: ${key}`).toBeDefined();
+      expect(TRANSLATIONS.te[key], `Missing Telugu translation for key: ${key}`).toBeDefined();
+
+      expect(TRANSLATIONS.en[key].length).toBeGreaterThan(0);
+      expect(TRANSLATIONS.hi[key].length).toBeGreaterThan(0);
+      expect(TRANSLATIONS.te[key].length).toBeGreaterThan(0);
     }
   });
 
-  it("provides distinct native language labels for Hindi and Telugu", () => {
-    expect(getTranslation("nav_dashboard", "en")).toBe("Dashboard");
-    expect(getTranslation("nav_dashboard", "hi")).toBe("डैशबोर्ड");
-    expect(getTranslation("nav_dashboard", "te")).toBe("డాష్‌బోర్డ్");
+  it("provides distinct native language translations for the Contractor Workspace", () => {
+    // Verified fix for reported Telugu screenshot issue
+    const contractorKeys: TranslationKey[] = [
+      "contractor_workspace",
+      "contractor_workspace_desc",
+      "registered_workers",
+      "documents",
+      "expiring_soon",
+      "contract_status",
+      "status_active",
+      "workers",
+      "worker_name",
+      "worker_id",
+    ];
 
-    expect(getTranslation("role_mine_manager", "en")).toBe("Mine Manager");
-    expect(getTranslation("role_mine_manager", "hi")).toBe("खदान प्रबंधक");
-    expect(getTranslation("role_mine_manager", "te")).toBe("గని మేనేజర్");
+    for (const k of contractorKeys) {
+      const enVal = getTranslation(k, "en");
+      const hiVal = getTranslation(k, "hi");
+      const teVal = getTranslation(k, "te");
+
+      expect(enVal).toBeDefined();
+      expect(hiVal).toBeDefined();
+      expect(teVal).toBeDefined();
+
+      // Telugu and Hindi must not be silently fallback English
+      expect(hiVal).not.toBe(enVal);
+      expect(teVal).not.toBe(enVal);
+    }
+
+    expect(getTranslation("contractor_workspace", "te")).toBe("కాంట్రాక్టర్ వర్క్స్పేస్");
+    expect(getTranslation("registered_workers", "te")).toBe("నమోదైన కార్మికులు");
+    expect(getTranslation("documents", "te")).toBe("పత్రాలు");
+    expect(getTranslation("expiring_soon", "te")).toBe("త్వరలో గడువు ముగియనున్నవి");
+    expect(getTranslation("contract_status", "te")).toBe("కాంట్రాక్ట్ స్థితి");
+    expect(getTranslation("status_active", "te")).toBe("క్రియాశీల");
+  });
+
+  it("provides distinct native language translations for all 6 Role Dashboard Headings", () => {
+    const roleHeadingKeys: TranslationKey[] = [
+      "heading_super_admin",
+      "heading_corporate_admin",
+      "heading_mine_manager",
+      "heading_inspector",
+      "heading_contractor",
+      "heading_regulator",
+    ];
+
+    for (const k of roleHeadingKeys) {
+      const enVal = getTranslation(k, "en");
+      const hiVal = getTranslation(k, "hi");
+      const teVal = getTranslation(k, "te");
+
+      expect(enVal.length).toBeGreaterThan(0);
+      expect(hiVal.length).toBeGreaterThan(0);
+      expect(teVal.length).toBeGreaterThan(0);
+      expect(hiVal).not.toBe(enVal);
+      expect(teVal).not.toBe(enVal);
+    }
+  });
+
+  it("provides translations for Global Notification Center and Features", () => {
+    const featureKeys: TranslationKey[] = [
+      "notifications_title",
+      "mark_all_read",
+      "compliance_health_title",
+      "overall_compliance",
+      "expiring_documents_title",
+      "quick_actions_title",
+      "system_status_title",
+      "ai_risk_score",
+    ];
+
+    for (const k of featureKeys) {
+      for (const loc of ["en", "hi", "te"] as Locale[]) {
+        const val = getTranslation(k, loc);
+        expect(val).toBeDefined();
+        expect(val.length).toBeGreaterThan(0);
+      }
+    }
   });
 });
 

@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { Mountain, ShieldAlert, ClipboardList, TriangleAlert, TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { aggregate, riskBand, useMinePortfolio } from "../../lib/hooks/use-portfolio";
+import { useI18n } from "../../lib/i18n";
 import { Badge, statusVariant } from "../ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
@@ -13,11 +15,12 @@ import { AiPanel } from "../common/ai-panel";
 
 export function CorporateDashboard({ title, readOnly = false }: { title: string; readOnly?: boolean }) {
   const { data, loading, error, reload } = useMinePortfolio();
+  const { t } = useI18n();
 
-  if (loading) return <LoadingState label="Loading portfolio…" />;
+  if (loading) return <LoadingState label={t("loading_label")} />;
   if (error) return <ErrorState message={error} onRetry={reload} />;
   if (!data || data.length === 0) {
-    return <EmptyState title="No mines available" description="No mines are in scope for your account yet." />;
+    return <EmptyState title={t("empty_records")} description="No mines are in scope for your account yet." />;
   }
 
   const agg = aggregate(data);
@@ -33,23 +36,45 @@ export function CorporateDashboard({ title, readOnly = false }: { title: string;
   return (
     <div className="space-y-5">
       <section aria-label="Key indicators" className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <KpiCard label="Mines" value={agg.totalMines} sublabel={`${agg.measuredMines} reporting`} />
         <KpiCard
-          label="Avg compliance"
+          label={t("kpi_mines")}
+          value={agg.totalMines}
+          sublabel={`${agg.measuredMines} ${t("kpi_reporting")}`}
+          icon={Mountain}
+        />
+        <KpiCard
+          label={t("kpi_avg_compliance")}
           value={`${agg.avgComplianceScore}%`}
           tone={agg.avgComplianceScore >= 85 ? "success" : agg.avgComplianceScore >= 60 ? "warning" : "destructive"}
+          icon={TrendingUp}
         />
-        <KpiCard label="Overdue compliance" value={agg.overdueCompliance} tone={agg.overdueCompliance > 0 ? "destructive" : "success"} />
-        <KpiCard label="Open inspections" value={agg.openInspections} />
-        <KpiCard label="Open incidents" value={agg.openIncidents} tone={agg.openIncidents > 0 ? "warning" : "success"} />
+        <KpiCard
+          label={t("kpi_overdue_compliance")}
+          value={agg.overdueCompliance}
+          tone={agg.overdueCompliance > 0 ? "destructive" : "success"}
+          icon={ShieldAlert}
+        />
+        <KpiCard
+          label={t("kpi_open_inspections")}
+          value={agg.openInspections}
+          icon={ClipboardList}
+        />
+        <KpiCard
+          label={t("kpi_open_incidents")}
+          value={agg.openIncidents}
+          tone={agg.openIncidents > 0 ? "warning" : "success"}
+          icon={TriangleAlert}
+        />
       </section>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Compliance score by mine</CardTitle>
+        <Card className="lg:col-span-2 border-border shadow-sm">
+          <CardHeader className="pb-3 border-b border-border/60">
+            <CardTitle className="text-sm font-bold tracking-tight">
+              {t("compliance_by_mine")}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             <div className="h-56 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
@@ -58,7 +83,7 @@ export function CorporateDashboard({ title, readOnly = false }: { title: string;
                   <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip
                     contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
-                    formatter={(v: number) => [`${v}%`, "Compliance"]}
+                    formatter={(v: number) => [`${v}%`, t("nav_compliance")]}
                   />
                   <Bar dataKey="score" radius={[4, 4, 0, 0]}>
                     {chartData.map((entry) => (
@@ -75,75 +100,83 @@ export function CorporateDashboard({ title, readOnly = false }: { title: string;
         </Card>
 
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Risk distribution</CardTitle>
+          <Card className="border-border shadow-sm">
+            <CardHeader className="pb-3 border-b border-border/60">
+              <CardTitle className="text-sm font-bold tracking-tight">
+                {t("risk_distribution")}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="pt-3 space-y-2">
               {(["HIGH", "MEDIUM", "LOW", "UNKNOWN"] as const).map((band) => (
-                <div key={band} className="flex items-center justify-between text-sm">
+                <div key={band} className="flex items-center justify-between text-sm py-1 border-b border-border/40 last:border-0">
                   <Badge variant={band === "HIGH" ? "destructive" : band === "MEDIUM" ? "warning" : band === "LOW" ? "success" : "secondary"}>
                     {band}
                   </Badge>
-                  <span className="tabular-nums text-muted-foreground">{riskCounts[band]} mines</span>
+                  <span className="tabular-nums text-muted-foreground font-medium text-xs">
+                    {riskCounts[band]} {t("kpi_mines").toLowerCase()}
+                  </span>
                 </div>
               ))}
               <p className="pt-1 text-[10px] leading-relaxed text-muted-foreground">
-                Banding is derived in the interface from compliance score, overdue items and open incidents. It is not
-                an official regulatory rating.
+                {t("risk_distribution_desc")}
               </p>
             </CardContent>
           </Card>
+
           <AiPanel
             mineId={data[0]?.mine.id}
-            title={data[0] ? `${data[0].mine.name} AI Risk & Anomaly Telemetry` : "AI Risk Telemetry"}
+            title={data[0] ? `${data[0].mine.name} ${t("ai_risk_telemetry")}` : t("ai_risk_telemetry")}
           />
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{readOnly ? "Authorized mines" : "Mine performance"}</CardTitle>
+      <Card className="border-border shadow-sm">
+        <CardHeader className="pb-3 border-b border-border/60">
+          <CardTitle className="text-sm font-bold tracking-tight">
+            {readOnly ? "Authorized Mines" : "Mine Performance Portfolio"}
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Mine</TableHead>
-                <TableHead className="hidden sm:table-cell">Type</TableHead>
-                <TableHead className="w-40">Compliance</TableHead>
-                <TableHead>Overdue</TableHead>
-                <TableHead className="hidden md:table-cell">Incidents</TableHead>
-                <TableHead>Risk</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((row) => {
-                const band = riskBand(row);
-                return (
-                  <TableRow key={row.mine.id}>
-                    <TableCell>
-                      <Link href={`/mines/${row.mine.id}`} className="font-medium text-primary hover:underline">
-                        {row.mine.name}
-                      </Link>
-                      <p className="text-xs text-muted-foreground">{row.mine.code}</p>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Badge variant="outline">{row.mine.mineType.replace("_", " ")}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {row.dashboard ? <ScoreBar score={row.dashboard.complianceScore} /> : <span className="text-xs text-muted-foreground">Unavailable</span>}
-                    </TableCell>
-                    <TableCell className="tabular-nums">{row.dashboard?.overdueCompliance ?? "—"}</TableCell>
-                    <TableCell className="hidden tabular-nums md:table-cell">{row.dashboard?.openIncidents ?? "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(band === "UNKNOWN" ? "" : band)}>{band}</Badge>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+        <CardContent className="pt-3">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="font-bold text-xs uppercase tracking-wider">{t("nav_mines")}</TableHead>
+                  <TableHead className="hidden sm:table-cell font-bold text-xs uppercase tracking-wider">{t("doc_type_label")}</TableHead>
+                  <TableHead className="w-40 font-bold text-xs uppercase tracking-wider">{t("nav_compliance")}</TableHead>
+                  <TableHead className="font-bold text-xs uppercase tracking-wider">{t("status_overdue")}</TableHead>
+                  <TableHead className="hidden md:table-cell font-bold text-xs uppercase tracking-wider">{t("nav_incidents")}</TableHead>
+                  <TableHead className="font-bold text-xs uppercase tracking-wider">{t("risk_level")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map((row) => {
+                  const band = riskBand(row);
+                  return (
+                    <TableRow key={row.mine.id} className="hover:bg-secondary/40">
+                      <TableCell>
+                        <Link href={`/mines/${row.mine.id}`} className="font-semibold text-primary hover:underline">
+                          {row.mine.name}
+                        </Link>
+                        <p className="text-xs text-muted-foreground font-mono">{row.mine.code}</p>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge variant="outline">{row.mine.mineType.replace("_", " ")}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {row.dashboard ? <ScoreBar score={row.dashboard.complianceScore} /> : <span className="text-xs text-muted-foreground">—</span>}
+                      </TableCell>
+                      <TableCell className="tabular-nums font-semibold">{row.dashboard?.overdueCompliance ?? "—"}</TableCell>
+                      <TableCell className="hidden tabular-nums md:table-cell">{row.dashboard?.openIncidents ?? "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariant(band === "UNKNOWN" ? "" : band)}>{band}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

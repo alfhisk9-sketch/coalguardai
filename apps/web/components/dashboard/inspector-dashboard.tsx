@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Play } from "lucide-react";
+import { Play, ClipboardList, Clock, AlertCircle, CheckCircle2 } from "lucide-react";
 import type { Inspection, Mine } from "@sih/types";
 import { useAsync } from "../../lib/hooks/use-async";
 import { minesApi } from "../../lib/api/mines";
 import { inspectionsApi } from "../../lib/api/inspections";
 import { formatDate } from "../../lib/utils";
+import { useI18n } from "../../lib/i18n";
 import { Badge, statusVariant } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -19,6 +20,8 @@ function isToday(value: string | null): boolean {
 }
 
 export function InspectorDashboard() {
+  const { t } = useI18n();
+
   const { data, loading, error, reload } = useAsync(async () => {
     const mines = (await minesApi.list()).data;
     const perMine = await Promise.all(
@@ -33,7 +36,7 @@ export function InspectorDashboard() {
     return { mines, inspections: perMine.flat() };
   }, []);
 
-  if (loading) return <LoadingState label="Loading your assignments…" />;
+  if (loading) return <LoadingState label={t("loading_label")} />;
   if (error) return <ErrorState message={error} onRetry={reload} />;
   if (!data) return null;
 
@@ -44,37 +47,58 @@ export function InspectorDashboard() {
 
   return (
     <div className="space-y-5">
-      <Card className="border-primary/30 bg-primary/5">
+      <Card className="border-primary/40 bg-primary/5 shadow-xs">
         <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
           <div>
-            <p className="text-sm font-medium">Ready to go into the field?</p>
-            <p className="text-xs text-muted-foreground">Start a guided inspection with GPS capture and observation recording.</p>
+            <p className="text-sm font-bold text-foreground">{t("ready_field")}</p>
+            <p className="text-xs text-muted-foreground">{t("ready_field_desc")}</p>
           </div>
-          <Button asChild>
+          <Button asChild className="gap-1.5 shadow-sm">
             <Link href="/inspections/new">
               <Play className="h-4 w-4" aria-hidden="true" />
-              Start inspection
+              <span>{t("btn_start_inspection")}</span>
             </Link>
           </Button>
         </CardContent>
       </Card>
 
       <section aria-label="Key indicators" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiCard label="Assigned" value={inspections.length} />
-        <KpiCard label="Today" value={today.length} tone={today.length > 0 ? "warning" : "default"} />
-        <KpiCard label="Pending" value={pending.length} />
-        <KpiCard label="Completed" value={completed.length} tone="success" />
+        <KpiCard
+          label={t("kpi_assigned")}
+          value={inspections.length}
+          icon={ClipboardList}
+        />
+        <KpiCard
+          label={t("kpi_today")}
+          value={today.length}
+          tone={today.length > 0 ? "warning" : "default"}
+          icon={Clock}
+        />
+        <KpiCard
+          label={t("pending_label")}
+          value={pending.length}
+          tone={pending.length > 0 ? "warning" : "default"}
+          icon={AlertCircle}
+        />
+        <KpiCard
+          label={t("status_completed")}
+          value={completed.length}
+          tone="success"
+          icon={CheckCircle2}
+        />
       </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Your inspections</CardTitle>
+      <Card className="border-border shadow-sm">
+        <CardHeader className="pb-3 border-b border-border/60">
+          <CardTitle className="text-sm font-bold tracking-tight">
+            {t("your_inspections")}
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="pt-3 space-y-2">
           {inspections.length === 0 ? (
             <EmptyState
-              title="No inspections assigned"
-              description="Scheduled inspections for mines in your scope will appear here."
+              title={t("no_inspections_assigned")}
+              description={t("no_inspections_desc")}
             />
           ) : (
             inspections.slice(0, 10).map((i) => (
@@ -84,10 +108,14 @@ export function InspectorDashboard() {
                 className="flex items-center justify-between gap-3 rounded-md border border-border p-3 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{i.inspectionType}</p>
-                  <p className="text-xs text-muted-foreground">Scheduled {formatDate(i.scheduledDate)}</p>
+                  <p className="truncate text-sm font-semibold text-foreground">{i.inspectionType}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("scheduled_on")} {formatDate(i.scheduledDate)}
+                  </p>
                 </div>
-                <Badge variant={statusVariant(i.status)}>{i.status.replace(/_/g, " ")}</Badge>
+                <Badge variant={statusVariant(i.status)} className="text-[10px]">
+                  {t(`status_${i.status.toLowerCase()}` as any) || i.status.replace(/_/g, " ")}
+                </Badge>
               </Link>
             ))
           )}

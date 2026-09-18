@@ -1,0 +1,21 @@
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cg-coal-grad" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="50%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#080D1A" />
+    </linearGradient>
+    <linearGradient id="cg-gold-grad" x1="10" y1="6" x2="38" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+  </defs>
+  <path d="M24 4L40 9V22C40 32.5 33.2 41.8 24 45C14.8 41.8 8 32.5 8 22V9L24 4Z" fill="url(#cg-coal-grad)" stroke="url(#cg-gold-grad)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M24 4V45M8 22L24 28L40 22M14 10L24 28L34 10" stroke="#475569" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.45"/>
+  <circle cx="24" cy="4" r="2" fill="#F59E0B"/>
+  <circle cx="8" cy="22" r="1.8" fill="#10B981"/>
+  <circle cx="40" cy="22" r="1.8" fill="#06B6D4"/>
+  <circle cx="24" cy="45" r="1.8" fill="#F59E0B"/>
+  <text x="24" y="28" text-anchor="middle" dominant-baseline="central" fill="#F8FAFC" font-size="14" font-weight="800" font-family="system-ui, -apple-system, sans-serif" letter-spacing="-0.5px">CG</text>
+  <circle cx="34" cy="29" r="1.5" fill="#10B981"/>
+</svg>

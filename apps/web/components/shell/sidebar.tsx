@@ -8,14 +8,18 @@ import { useAuth } from "../../lib/auth/provider";
 import { useI18n } from "../../lib/i18n";
 import { cn } from "../../lib/utils";
 import { NavIcon } from "./nav-icon";
+import { BrandLogo } from "./brand-logo";
 
 const GROUP_I18N_KEYS: Record<string, any> = {
   "Overview": "group_overview",
-  "Governance": "group_governance",
-  "Field Operations": "group_field_operations",
-  "Workforce": "group_workforce",
   "Operations": "group_operations",
+  "Workforce": "group_workforce",
+  "Environment": "group_environment",
+  "Documents": "group_documents",
+  "Intelligence": "group_intelligence",
+  "Governance": "group_governance",
   "Administration": "group_administration",
+  "Field Operations": "group_field_operations",
 };
 
 const ITEM_I18N_KEYS: Record<string, any> = {
@@ -23,20 +27,21 @@ const ITEM_I18N_KEYS: Record<string, any> = {
   "Mines": "nav_mines",
   "Map": "nav_map",
   "Compliance": "nav_compliance",
-  "Corrective Actions": "nav_corrective_actions",
-  "Documents": "nav_documents",
-  "AI Assistant": "nav_assistant",
   "Inspections": "nav_inspections",
-  "Observations": "nav_observations",
   "Incidents": "nav_incidents",
+  "Observations": "nav_observations",
+  "Corrective Actions": "nav_corrective_actions",
   "Contractors": "nav_contractors",
   "Workers": "nav_workers",
   "Attendance": "nav_attendance",
   "Environmental": "nav_environmental",
   "Production": "nav_production",
-  "Reports": "nav_reports",
+  "Documents": "nav_documents",
+  "AI Assistant": "nav_assistant",
+  "Notifications": "nav_notifications",
   "Grievances": "nav_grievances",
   "Audit Log": "nav_audit",
+  "Reports": "nav_reports",
   "Administration": "nav_admin",
 };
 
@@ -47,15 +52,17 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const items = visibleNavItems(ctx?.permissions ?? []);
 
   return (
-    <nav className="flex h-full flex-col gap-5 overflow-y-auto scrollbar-thin px-3 py-4" aria-label="Main navigation">
+    <nav className="flex h-full flex-col gap-4 overflow-y-auto scrollbar-thin px-3 py-3" aria-label="Main navigation">
       {NAV_GROUP_ORDER.map((group) => {
         const groupItems = items.filter((i) => i.group === group);
         if (groupItems.length === 0) return null;
         const groupKey = GROUP_I18N_KEYS[group];
         const groupLabel = groupKey ? t(groupKey) : group;
         return (
-          <div key={group}>
-            <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{groupLabel}</p>
+          <div key={group} className="space-y-1">
+            <p className="px-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
+              {groupLabel}
+            </p>
             <ul className="space-y-0.5">
               {groupItems.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -68,13 +75,19 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       onClick={onNavigate}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "flex items-center gap-2.5 rounded-md px-2 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        "group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         active
-                          ? "bg-primary/10 font-medium text-primary"
+                          ? "bg-primary text-primary-foreground shadow-sm"
                           : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                       )}
                     >
-                      <NavIcon name={item.icon} className="h-4 w-4 shrink-0" />
+                      <NavIcon
+                        name={item.icon}
+                        className={cn(
+                          "h-4 w-4 shrink-0 transition-transform group-hover:scale-105",
+                          active ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                        )}
+                      />
                       <span className="truncate">{itemLabel}</span>
                     </Link>
                   </li>
@@ -90,9 +103,9 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 export function DesktopSidebar() {
   return (
-    <aside className="hidden w-60 shrink-0 border-r border-border bg-card lg:block">
+    <aside className="hidden w-64 shrink-0 border-r border-border bg-card lg:block shadow-sm">
       <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-        <BrandMark />
+        <BrandLogo size="md" />
       </div>
       <div className="h-[calc(100vh-3.5rem)]">
         <SidebarContent />
@@ -105,11 +118,20 @@ export function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => 
   if (!open) return null;
   return (
     <div className="lg:hidden">
-      <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} aria-hidden="true" />
-      <div role="dialog" aria-modal="true" aria-label="Navigation menu" className="fixed inset-y-0 left-0 z-50 w-64 border-r border-border bg-card shadow-xl">
+      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity" onClick={onClose} aria-hidden="true" />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
+        className="fixed inset-y-0 left-0 z-50 w-72 border-r border-border bg-card shadow-2xl animate-in slide-in-from-left duration-200"
+      >
         <div className="flex h-14 items-center justify-between border-b border-border px-4">
-          <BrandMark />
-          <button onClick={onClose} aria-label="Close navigation" className="rounded-md p-1.5 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <BrandLogo size="md" />
+          <button
+            onClick={onClose}
+            aria-label="Close navigation"
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
@@ -121,14 +143,4 @@ export function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => 
   );
 }
 
-export function BrandMark() {
-  return (
-    <Link href="/dashboard" className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
-      <span className="flex h-7 w-7 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground">CG</span>
-      <span className="flex flex-col leading-none">
-        <span className="text-sm font-semibold tracking-tight">CoalGuard AI</span>
-        <span className="text-[10px] text-muted-foreground">Ministry of Coal / CIL</span>
-      </span>
-    </Link>
-  );
-}
+export { BrandLogo as BrandMark };

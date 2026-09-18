@@ -28,6 +28,9 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY) as Locale | null;
       if (stored && (stored === "en" || stored === "hi" || stored === "te")) {
         setLocaleState(stored);
+        if (typeof document !== "undefined") {
+          document.documentElement.lang = stored;
+        }
       }
     } catch {
       // LocalStorage not available (SSR / private browsing)
@@ -38,6 +41,9 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   const setLocale = React.useCallback((next: Locale) => {
     setLocaleState(next);
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = next;
+    }
     try {
       window.localStorage.setItem(LOCALE_STORAGE_KEY, next);
     } catch {
