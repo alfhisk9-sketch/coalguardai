@@ -5,7 +5,8 @@ import type { AuthContext as AuthContextDto } from "@sih/types";
 import type { PermissionKey, RoleKey } from "@sih/config";
 import { meApi } from "../api/me";
 import { ApiRequestError } from "../api/client";
-import { DEMO_MODE, DEMO_ROLE_STORAGE_KEY, buildDemoAuthContext } from "./demo";
+import { getSupabaseBrowserClient } from "../supabase-browser";
+import { DEMO_MODE, DEMO_ROLE_STORAGE_KEY, NAMED_DEMO_ACCOUNTS, buildDemoAuthContext } from "./demo";
 
 interface AuthState {
   ctx: AuthContextDto | null;
@@ -14,7 +15,9 @@ interface AuthState {
   isDemo: boolean;
   primaryRole: RoleKey | null;
   can: (permission: PermissionKey) => boolean;
+  enterDemoWorkspace: (role: RoleKey) => Promise<boolean>;
   setDemoRole: (role: RoleKey) => void;
+  signOut: () => Promise<void>;
   reload: () => void;
 }
 
@@ -36,44 +39,110 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isDemo, setIsDemo] = React.useState(false);
   const [tick, setTick] = React.useState(0);
 
-  const applyDemoRole = React.useCallback((role: RoleKey) => {
-    window.localStorage.setItem(DEMO_ROLE_STORAGE_KEY, role);
-    setCtx(buildDemoAuthContext(role));
-    setIsDemo(true);
-    setError(null);
-    setLoading(false);
+  const fetchSession = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await meApi.get();
+      setCtx(res.data);
+      const isDemoAccount = res.data.userEmail?.includes(".demo@sih26024.test") ?? false;
+      setIsDemo(isDemoAccount);
+      setError(null);
+    } catch (err) {
+      if (DEMO_MODE) {
+        const stored = typeof window !== "undefined" ? (window.localStorage.getItem(DEMO_ROLE_STORAGE_KEY) as RoleKey | null) : null;
+        if (stored) {
+          setCtx(buildDemoAuthContext(stored));
+          setIsDemo(true);
+          setError(null);
+          return;
+        }
+      }
+      setCtx(null);
+      setIsDemo(false);
+      setError(err instanceof ApiRequestError ? err.message : "Unable to load your session.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   React.useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    meApi
-      .get()
-      .then((res) => {
-        if (cancelled) return;
-        setCtx(res.data);
-        setIsDemo(false);
-        setError(null);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        // No live session. In demo mode fall back to a local demo context so the
-        // app is demonstrable; otherwise surface the real error to the login flow.
-        if (DEMO_MODE) {
-          const stored = window.localStorage.getItem(DEMO_ROLE_STORAGE_KEY) as RoleKey | null;
-          applyDemoRole(stored ?? "CORPORATE_ADMIN");
-          return;
-        }
+    fetchSession();
+
+    const supabase = getSupabaseBrowserClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        await fetchSession();
+      } else if (event === "SIGNED_OUT") {
         setCtx(null);
-        setError(err instanceof ApiRequestError ? err.message : "Unable to load your session.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+        setIsDemo(false);
+        setLoading(false);
+      }
+    });
+
     return () => {
-      cancelled = true;
+      subscription.unsubscribe();
     };
-  }, [tick, applyDemoRole]);
+  }, [tick, fetchSession]);
+
+  const enterDemoWorkspace = React.useCallback(async (role: RoleKey): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const persona = NAMED_DEMO_ACCOUNTS[role];
+      if (persona) {
+        const supabase = getSupabaseBrowserClient();
+        const { error: signInErr } = await supabase.auth.signInWithPassword({
+          email: persona.email,
+          password: "demo123"
+        });
+
+        if (!signInErr) {
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem(DEMO_ROLE_STORAGE_KEY, role);
+          }
+          await fetchSession();
+          return true;
+        }
+      }
+
+      // Offline / fallback demo context if remote signIn is unavailable
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(DEMO_ROLE_STORAGE_KEY, role);
+      }
+      setCtx(buildDemoAuthContext(role));
+      setIsDemo(true);
+      return true;
+    } catch {
+      setCtx(buildDemoAuthContext(role));
+      setIsDemo(true);
+      return true;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchSession]);
+
+  const applyDemoRole = React.useCallback((role: RoleKey) => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(DEMO_ROLE_STORAGE_KEY, role);
+    }
+    setCtx(buildDemoAuthContext(role));
+    setIsDemo(true);
+    setError(null);
+  }, []);
+
+  const handleSignOut = React.useCallback(async () => {
+    try {
+      const supabase = getSupabaseBrowserClient();
+      await supabase.auth.signOut();
+    } catch {
+      // Ignore
+    }
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(DEMO_ROLE_STORAGE_KEY);
+    }
+    setCtx(null);
+    setIsDemo(false);
+  }, []);
 
   const value = React.useMemo<AuthState>(
     () => ({
@@ -83,10 +152,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isDemo,
       primaryRole: resolvePrimaryRole(ctx),
       can: (permission) => ctx?.permissions.includes(permission) ?? false,
+      enterDemoWorkspace,
       setDemoRole: applyDemoRole,
+      signOut: handleSignOut,
       reload: () => setTick((t) => t + 1),
     }),
-    [ctx, loading, error, isDemo, applyDemoRole]
+    [ctx, loading, error, isDemo, enterDemoWorkspace, applyDemoRole, handleSignOut]
   );
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
@@ -97,3 +168,4 @@ export function useAuth(): AuthState {
   if (!value) throw new Error("useAuth must be used inside <AuthProvider>.");
   return value;
 }
+

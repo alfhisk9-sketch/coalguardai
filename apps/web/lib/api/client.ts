@@ -12,15 +12,28 @@ export class ApiRequestError extends Error {
   }
 }
 
-/**
- * Thin fetch wrapper around the C1 route handlers. Matches API.md's response envelope
- * exactly ({ data, meta } / { error }) and throws ApiRequestError so callers can branch
- * on `.status`/`.code` instead of re-parsing the envelope everywhere.
- */
+import { getSupabaseBrowserClient } from "../supabase-browser";
+
 export async function apiRequest<T>(path: string, init?: RequestInit): Promise<ApiSuccess<T>> {
+  const customHeaders: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (typeof window !== "undefined") {
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        customHeaders["Authorization"] = `Bearer ${session.access_token}`;
+      }
+    } catch {
+      // Supabase client not initialized yet or in mock test environment
+    }
+  }
+
   const res = await fetch(path, {
     ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    headers: { ...customHeaders, ...(init?.headers as Record<string, string> ?? {}) },
     credentials: "include",
   });
   const body = (await res.json().catch(() => null)) as ApiSuccess<T> | ApiError | null;

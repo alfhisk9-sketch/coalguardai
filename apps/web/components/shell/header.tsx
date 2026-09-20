@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronRight, LogOut, Menu } from "lucide-react";
 import type { RoleKey } from "@sih/config";
 import { ROLE_KEYS } from "@sih/config";
@@ -41,7 +41,8 @@ const PATH_I18N_MAP: Record<string, string> = {
 
 export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
   const pathname = usePathname();
-  const { ctx, primaryRole, isDemo, setDemoRole } = useAuth();
+  const router = useRouter();
+  const { ctx, primaryRole, isDemo, setDemoRole, signOut } = useAuth();
   const { t } = useI18n();
 
   const persona = primaryRole ? NAMED_DEMO_ACCOUNTS[primaryRole] : null;
@@ -137,8 +138,9 @@ export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
           aria-label={t("sign_out")}
           title={t("sign_out")}
           className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          onClick={() => {
-            window.location.href = "/login";
+          onClick={async () => {
+            await signOut();
+            router.replace("/login");
           }}
         >
           <LogOut className="h-4 w-4" aria-hidden="true" />
