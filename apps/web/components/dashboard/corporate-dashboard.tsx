@@ -28,8 +28,8 @@ export function CorporateDashboard({ title, readOnly = false }: { title: string;
   }
 
   const agg = aggregate(data);
-  const contractorsCount = contractorsData?.length ?? 12;
-  const workersCount = workersData?.length ?? 48;
+  const contractorsCount = contractorsData ? contractorsData.length : 0;
+  const workersCount = workersData ? workersData.length : 0;
 
   const chartData = data.map((r) => ({
     name: r.mine.code || r.mine.name.slice(0, 8),

@@ -37,50 +37,32 @@ export async function getAuthContext(): Promise<AuthContext> {
   const { data: { user } } = await (bearerToken ? supabase.auth.getUser(bearerToken) : supabase.auth.getUser());
   if (!user) throw new UnauthenticatedError();
 
-  let { data: profile } = await supabase.from("profiles").select("contractor_id, full_name, email").eq("id", user.id).maybeSingle();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const dbClient = serviceRoleKey
+    ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, { auth: { persistSession: false } })
+    : supabase;
 
-  let { data: roleRows } = await supabase
+  let { data: profile } = await dbClient.from("profiles").select("contractor_id, full_name, email").eq("id", user.id).maybeSingle();
+
+  let { data: roleRows } = await dbClient
     .from("user_roles")
     .select("role_id, mine_id, roles(key)")
     .eq("user_id", user.id);
 
-  // If user is freshly signed up or OAuth verified and has no profile or roles yet,
-  // auto-provision default profile and safe least-privileged role (REGULATOR) via server-side admin
-  if (!profile || !roleRows || roleRows.length === 0) {
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (serviceRoleKey) {
-      const adminClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, {
-        auth: { persistSession: false }
-      });
-
-      const fullName = (user.user_metadata?.full_name as string) || user.email?.split("@")[0] || "User";
-
-      if (!profile) {
-        await adminClient.from("profiles").upsert({
-          id: user.id,
-          full_name: fullName,
-          email: user.email ?? "",
-          is_active: true
-        }, { onConflict: "id" });
-        profile = { contractor_id: null, full_name: fullName, email: user.email ?? "" };
-      }
-
-      if (!roleRows || roleRows.length === 0) {
-        // Find REGULATOR role ID (least-privileged statutory oversight role)
-        const { data: regRole } = await adminClient.from("roles").select("id").eq("key", "REGULATOR").single();
-        if (regRole) {
-          await adminClient.from("user_roles").insert({
-            user_id: user.id,
-            role_id: regRole.id,
-            mine_id: null
-          });
-          roleRows = [{ role_id: regRole.id, mine_id: null, roles: { key: "REGULATOR" } }] as any;
-        }
-      }
-    }
+  // If user has no profile record yet (e.g. OAuth login), safely provision a basic profile
+  if (!profile && serviceRoleKey) {
+    const fullName = (user.user_metadata?.full_name as string) || user.email?.split("@")[0] || "User";
+    await dbClient.from("profiles").upsert({
+      id: user.id,
+      full_name: fullName,
+      email: user.email ?? "",
+      is_active: true
+    }, { onConflict: "id" });
+    profile = { contractor_id: null, full_name: fullName, email: user.email ?? "" };
   }
 
-  const roles = (roleRows ?? []).map((r: any) => ({ roleKey: r.roles.key as RoleKey, mineId: r.mine_id as string | null }));
+  // Canonical role resolution: ONLY from verified database records in user_roles
+  const roles = (roleRows ?? []).map((r: any) => ({ roleKey: r.roles?.key as RoleKey, mineId: (r.mine_id as string | null) ?? null }));
 
   const roleIds = (roleRows ?? []).map((r: any) => r.role_id).filter(Boolean);
   let permissions: PermissionKey[] = [];

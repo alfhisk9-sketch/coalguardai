@@ -6,7 +6,28 @@ import { assertPermission, assertMineAccess } from "../authz";
 export async function listMinesForUser(ctx: AuthContext, db: Db): Promise<Mine[]> {
   const orgWide = ctx.roles.some((r) => r.roleKey === "SUPER_ADMIN" || r.roleKey === "CORPORATE_ADMIN");
   if (orgWide) return db.listMines("ALL");
+
   const mineIds = ctx.roles.map((r) => r.mineId).filter((id): id is string => id !== null);
+
+  // Contractor scope resolution: authenticated user -> profile.contractor_id -> contractor.mine_id
+  if (ctx.contractorId) {
+    try {
+      const contractor = await db.getContractor(ctx.contractorId);
+      if (contractor && (contractor.status === "ACTIVE" || !contractor.status) && contractor.mineId) {
+        if (!mineIds.includes(contractor.mineId)) {
+          mineIds.push(contractor.mineId);
+        }
+      }
+    } catch {
+      // Contractor resolution failure results in least-privilege scoping
+    }
+  }
+
+  // If user has no authorized mine scope, safely return empty list
+  if (mineIds.length === 0) {
+    return [];
+  }
+
   return db.listMines(mineIds);
 }
 

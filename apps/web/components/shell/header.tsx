@@ -39,6 +39,26 @@ const PATH_I18N_MAP: Record<string, string> = {
   "/admin": "nav_admin",
 };
 
+export function formatRoleLabel(roleKey: RoleKey | null | undefined): string {
+  if (!roleKey) return "Role Pending";
+  switch (roleKey) {
+    case "SUPER_ADMIN":
+      return "Super Admin";
+    case "CORPORATE_ADMIN":
+      return "Corporate Admin";
+    case "MINE_MANAGER":
+      return "Mine Manager";
+    case "REGULATOR":
+      return "Safety Officer";
+    case "INSPECTOR":
+      return "Inspector";
+    case "CONTRACTOR":
+      return "Contractor";
+    default:
+      return String(roleKey).replace(/_/g, " ");
+  }
+}
+
 export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -47,8 +67,7 @@ export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
 
   const persona = primaryRole ? NAMED_DEMO_ACCOUNTS[primaryRole] : null;
   const displayName = ctx?.userName || persona?.name || ctx?.userId || "User";
-  const roleTranslationKey = primaryRole ? `role_${primaryRole.toLowerCase()}` : "no_role";
-  const roleLabel = t(roleTranslationKey as any) || primaryRole || t("no_role");
+  const roleLabel = formatRoleLabel(primaryRole);
 
   // Determine current page breadcrumb
   const matchedKey = Object.entries(PATH_I18N_MAP).find(([path]) =>

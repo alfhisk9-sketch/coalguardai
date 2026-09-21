@@ -27,6 +27,7 @@ import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { Select } from "../../components/ui/select";
 import { LanguageSelector } from "../../components/shell/language-selector";
 
 interface DemoRoleConfig {
@@ -82,6 +83,28 @@ const DEMO_ROLES: DemoRoleConfig[] = [
   },
 ];
 
+const PUBLIC_ROLE_OPTIONS = [
+  { key: "MINE_MANAGER", label: "Mine Manager" },
+  { key: "REGULATOR", label: "Safety Officer" },
+  { key: "INSPECTOR", label: "Inspector" },
+  { key: "CONTRACTOR", label: "Contractor" },
+] as const;
+
+const CANONICAL_DEMO_MINES = [
+  { id: "a0000000-0000-0000-0000-000000000030", name: "Shakti Open Cast Mine", code: "SHK-DEMO" },
+  { id: "a0000000-0000-0000-0000-000000000034", name: "Vindhya Coal Mine", code: "VND-DEMO" },
+  { id: "a0000000-0000-0000-0000-000000000035", name: "Eastern Ridge Mine", code: "ERC-DEMO" },
+  { id: "a0000000-0000-0000-0000-000000000036", name: "Central Basin Open Cast", code: "CBN-DEMO" },
+  { id: "a0000000-0000-0000-0000-000000000037", name: "Satpura Coal Mine", code: "STP-DEMO" },
+  { id: "a0000000-0000-0000-0000-000000000038", name: "Narmada Valley Mine", code: "NVB-DEMO" },
+  { id: "a0000000-0000-0000-0000-000000000039", name: "Deccan Coal Project", code: "DCP-DEMO" },
+  { id: "a0000000-0000-0000-0000-00000000003a", name: "Korba Ridge Mine", code: "KRB-DEMO" },
+  { id: "a0000000-0000-0000-0000-00000000003b", name: "Damodar Open Cast Mine", code: "DMR-DEMO" },
+  { id: "a0000000-0000-0000-0000-00000000003c", name: "Mahanadi Coal Block", code: "MHD-DEMO" },
+  { id: "a0000000-0000-0000-0000-00000000003d", name: "Godavari Basin Mine", code: "GDB-DEMO" },
+  { id: "a0000000-0000-0000-0000-00000000003e", name: "Kalinga Open Cast Mine", code: "KLG-DEMO" },
+];
+
 export default function LoginPage() {
   const router = useRouter();
   const { reload } = useAuth();
@@ -92,6 +115,9 @@ export default function LoginPage() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [roleKey, setRoleKey] = React.useState<string>("MINE_MANAGER");
+  const [selectedMineId, setSelectedMineId] = React.useState<string>(CANONICAL_DEMO_MINES[0]?.id || "a0000000-0000-0000-0000-000000000030");
+  const [minesList, setMinesList] = React.useState(CANONICAL_DEMO_MINES);
   const [submitting, setSubmitting] = React.useState(false);
   const [googleSubmitting, setGoogleSubmitting] = React.useState(false);
   const [activeDemoSigning, setActiveDemoSigning] = React.useState<RoleKey | null>(null);
@@ -99,6 +125,23 @@ export default function LoginPage() {
   const [unconfirmedEmail, setUnconfirmedEmail] = React.useState<string | null>(null);
   const [resending, setResending] = React.useState(false);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    async function loadMines() {
+      try {
+        const supabase = getSupabaseBrowserClient();
+        const res = await supabase.from("mines").select("id, name, code").order("name");
+        const mines = res.data as { id: string; name: string; code: string }[] | null;
+        if (mines && mines.length > 0) {
+          setMinesList(mines);
+          if (!selectedMineId && mines[0]) setSelectedMineId(mines[0].id);
+        }
+      } catch {
+        // Keep CANONICAL_DEMO_MINES fallback
+      }
+    }
+    loadMines();
+  }, []);
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
@@ -159,31 +202,42 @@ export default function LoginPage() {
 
     setSubmitting(true);
     try {
-      const supabase = getSupabaseBrowserClient();
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: {
-            full_name: fullName.trim() || email.split("@")[0],
-          },
-        },
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: fullName.trim() || email.split("@")[0],
+          email: email.trim(),
+          password,
+          roleKey,
+          mineId: selectedMineId || CANONICAL_DEMO_MINES[0]?.id || "a0000000-0000-0000-0000-000000000030",
+        }),
       });
 
-      if (signUpError) {
-        setError(signUpError.message);
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok || !json || "error" in json) {
+        setError(json?.error?.message || "Registration failed. Please check your information.");
         return;
       }
 
-      if (data.session) {
-        reload();
-        router.replace("/dashboard");
-      } else {
-        setSuccessMessage("Account created successfully! Please check your email inbox to confirm your account before signing in.");
-        setUnconfirmedEmail(email.trim());
+      // Auto sign in with provisioned credentials
+      const supabase = getSupabaseBrowserClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (signInError) {
+        setSuccessMessage("Account created successfully! Please sign in with your credentials.");
+        setMode("signin");
+        return;
       }
+
+      reload();
+      router.replace("/dashboard");
     } catch {
-      setError("Sign-up is unavailable. Check that Supabase environment variables are configured.");
+      setError("Registration service is temporarily unavailable. Check network connectivity.");
     } finally {
       setSubmitting(false);
     }
@@ -470,6 +524,46 @@ export default function LoginPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   />
+                </div>
+
+                {/* Statutory Role Selector */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-role" className="text-xs text-slate-300 font-medium">Select your role</Label>
+                  <Select
+                    id="signup-role"
+                    value={roleKey}
+                    onChange={(e) => setRoleKey(e.target.value)}
+                    className="border-slate-700 bg-slate-950 text-slate-100 focus-visible:ring-amber-500"
+                  >
+                    {PUBLIC_ROLE_OPTIONS.map((opt) => (
+                      <option key={opt.key} value={opt.key} className="bg-slate-900 text-white">
+                        {opt.label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                {/* Assigned / Requested Mine Selector */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="signup-mine" className="text-xs text-slate-300 font-medium">Assigned / Requested Mine</Label>
+                    <span className="text-[10px] text-amber-400 font-medium">Statutory Scope</span>
+                  </div>
+                  <Select
+                    id="signup-mine"
+                    value={selectedMineId}
+                    onChange={(e) => setSelectedMineId(e.target.value)}
+                    className="border-slate-700 bg-slate-950 text-slate-100 focus-visible:ring-amber-500"
+                  >
+                    {minesList.map((m) => (
+                      <option key={m.id} value={m.id} className="bg-slate-900 text-white">
+                        {m.name} ({m.code})
+                      </option>
+                    ))}
+                  </Select>
+                  <p className="text-[11px] text-slate-400 leading-snug">
+                    Your selected mine is used for access provisioning and may require statutory authorization.
+                  </p>
                 </div>
 
                 {error ? (
