@@ -3,28 +3,38 @@ services:
     name: coalguard-ai-service
     env: node
     region: oregon
-    plan: starter
+    plan: free
     buildCommand: npm install && npm run build --workspace=apps/web
     startCommand: npm run start --workspace=apps/web
     healthCheckPath: /health
+
     envVars:
       - key: NODE_VERSION
         value: 20.14.0
+
       - key: NEXT_PUBLIC_SUPABASE_URL
         sync: false
+
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
         sync: false
+
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+
       - key: GEMINI_API_KEY
         sync: false
+
       - key: GEMINI_MODEL
         value: gemini-flash-latest
+
       - key: GEMINI_ENABLED
         value: "true"
+
       - key: APP_ENV
         value: production
+
       - key: DATA_MODE
         value: demo
+
       - key: SESSION_SECRET
         generateValue: true
