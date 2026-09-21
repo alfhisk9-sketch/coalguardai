@@ -48,15 +48,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsDemo(isDemoAccount);
       setError(null);
     } catch (err) {
-      if (DEMO_MODE) {
-        const stored = typeof window !== "undefined" ? (window.localStorage.getItem(DEMO_ROLE_STORAGE_KEY) as RoleKey | null) : null;
-        if (stored) {
-          setCtx(buildDemoAuthContext(stored));
-          setIsDemo(true);
-          setError(null);
-          return;
-        }
-      }
       setCtx(null);
       setIsDemo(false);
       setError(err instanceof ApiRequestError ? err.message : "Unable to load your session.");
@@ -89,33 +80,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     try {
       const persona = NAMED_DEMO_ACCOUNTS[role];
-      if (persona) {
-        const supabase = getSupabaseBrowserClient();
-        const { error: signInErr } = await supabase.auth.signInWithPassword({
-          email: persona.email,
-          password: "demo123"
-        });
-
-        if (!signInErr) {
-          if (typeof window !== "undefined") {
-            window.localStorage.setItem(DEMO_ROLE_STORAGE_KEY, role);
-          }
-          await fetchSession();
-          return true;
-        }
+      if (!persona) {
+        setError(`Unknown demo persona: ${role}`);
+        return false;
       }
 
-      // Offline / fallback demo context if remote signIn is unavailable
+      const supabase = getSupabaseBrowserClient();
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: persona.email,
+        password: "demo123"
+      });
+
+      if (signInErr) {
+        setError(`Demo sign-in failed: ${signInErr.message}`);
+        return false;
+      }
+
       if (typeof window !== "undefined") {
         window.localStorage.setItem(DEMO_ROLE_STORAGE_KEY, role);
       }
-      setCtx(buildDemoAuthContext(role));
-      setIsDemo(true);
+      await fetchSession();
       return true;
-    } catch {
-      setCtx(buildDemoAuthContext(role));
-      setIsDemo(true);
-      return true;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unable to establish demo session.";
+      setError(msg);
+      return false;
     } finally {
       setLoading(false);
     }

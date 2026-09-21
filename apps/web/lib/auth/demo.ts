@@ -3,9 +3,9 @@ import type { RoleKey } from "@sih/config";
 import { ROLE_PERMISSION_MATRIX } from "@sih/config";
 
 /**
- * DEMO SESSION SUPPORT — explicitly opt-in via NEXT_PUBLIC_DEMO_MODE=true.
+ * DEMO SESSION SUPPORT — enabled by default unless explicitly disabled via NEXT_PUBLIC_DEMO_MODE=false.
  */
-export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE !== "false";
 
 export interface NamedDemoAccount {
   name: string;
