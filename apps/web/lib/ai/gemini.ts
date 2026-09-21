@@ -372,6 +372,11 @@ Return strict JSON:
       lower.includes("secret") ||
       lower.includes("credential") ||
       lower.includes("service_role") ||
+      lower.includes("service role") ||
+      lower.includes("service-role") ||
+      lower.includes("ignore all instructions") ||
+      lower.includes("system prompt") ||
+      lower.includes("reveal the") ||
       lower.includes("api key") ||
       lower.includes("api_key") ||
       lower.includes("drop table") ||
@@ -386,6 +391,8 @@ Return strict JSON:
         answer: "Access Denied: In accordance with CoalGuard AI governance security policies, system credentials, database keys, SQL commands, and unauthorized cross-entity records cannot be queried or disclosed.",
         isSimulated: false,
         modelVersion: GEMINI_MODEL_VERSION,
+        sourceIndicator: "REGULATORY_GUIDANCE",
+        contextSources: [],
       };
     }
 
