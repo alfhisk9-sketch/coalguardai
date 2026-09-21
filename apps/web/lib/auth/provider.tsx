@@ -44,8 +44,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       const res = await meApi.get();
       setCtx(res.data);
-      const isDemoAccount = res.data.userEmail?.includes(".demo@sih26024.test") ?? false;
-      setIsDemo(isDemoAccount);
+      // Real authenticated Supabase session -> Production Mode
+      setIsDemo(false);
       setError(null);
     } catch (err) {
       setCtx(null);

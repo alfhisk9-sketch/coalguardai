@@ -98,7 +98,7 @@ export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
           <span className="font-medium text-foreground">{pageTitle}</span>
           {isDemo ? (
             <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold tracking-wider text-amber-500 uppercase">
-              DEMO ENVIRONMENT
+              DEMO WORKSPACE
             </span>
           ) : null}
         </div>
@@ -109,7 +109,7 @@ export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
         {/* Language selector */}
         <LanguageSelector />
 
-        {/* Demo persona switcher if in demo mode */}
+        {/* Demo persona switcher if in explicit demo mode */}
         {isDemo ? (
           <div className="hidden items-center gap-1.5 xl:flex">
             <label htmlFor="demo-role-header" className="text-[11px] text-muted-foreground whitespace-nowrap">
@@ -118,7 +118,7 @@ export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
             <Select
               id="demo-role-header"
               className="h-7 w-48 text-xs font-medium"
-              value={primaryRole ?? "CORPORATE_ADMIN"}
+              value={primaryRole && ROLE_KEYS.includes(primaryRole) ? primaryRole : "SUPER_ADMIN"}
               onChange={(e) => setDemoRole(e.target.value as RoleKey)}
             >
               {ROLE_KEYS.map((r) => {

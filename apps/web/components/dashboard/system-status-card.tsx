@@ -11,6 +11,9 @@ export function SystemStatusCard() {
   const { isDemo } = useAuth();
   const { t } = useI18n();
   const [isOnline, setIsOnline] = React.useState(true);
+  const [apiStatus, setApiStatus] = React.useState<"healthy" | "degraded">("healthy");
+  const [dbStatus, setDbStatus] = React.useState<"connected" | "disconnected">("connected");
+  const [geminiStatus, setGeminiStatus] = React.useState<"connected" | "offline">("connected");
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
@@ -19,7 +22,23 @@ export function SystemStatusCard() {
       const onOffline = () => setIsOnline(false);
       window.addEventListener("online", onOnline);
       window.addEventListener("offline", onOffline);
+
+      let mounted = true;
+      fetch("/api/health")
+        .then((res) => res.json())
+        .then((data) => {
+          if (mounted && data?.status === "ok") {
+            setApiStatus("healthy");
+            setDbStatus("connected");
+            setGeminiStatus("connected");
+          }
+        })
+        .catch(() => {
+          if (mounted) setApiStatus("degraded");
+        });
+
       return () => {
+        mounted = false;
         window.removeEventListener("online", onOnline);
         window.removeEventListener("offline", onOffline);
       };
@@ -38,16 +57,16 @@ export function SystemStatusCard() {
     {
       name: t("system_service_supabase"),
       icon: Database,
-      status: isDemo ? t("status_demo") : t("status_connected"),
-      variant: isDemo ? "warning" : "success",
-      isOk: true,
+      status: dbStatus === "connected" ? t("status_connected") : t("status_pending"),
+      variant: dbStatus === "connected" ? "success" : "warning",
+      isOk: dbStatus === "connected",
     },
     {
       name: t("system_service_gemini"),
       icon: Sparkles,
-      status: isDemo ? t("status_fallback") : t("status_connected"),
-      variant: isDemo ? "warning" : "success",
-      isOk: true,
+      status: geminiStatus === "connected" ? t("status_connected") : t("status_pending"),
+      variant: geminiStatus === "connected" ? "success" : "warning",
+      isOk: geminiStatus === "connected",
     },
     {
       name: t("system_service_offline"),
@@ -59,20 +78,28 @@ export function SystemStatusCard() {
     {
       name: t("system_service_api"),
       icon: Activity,
-      status: t("status_healthy"),
-      variant: "success",
-      isOk: true,
+      status: apiStatus === "healthy" ? t("status_healthy") : t("status_pending"),
+      variant: apiStatus === "healthy" ? "success" : "warning",
+      isOk: apiStatus === "healthy",
     },
   ];
 
   return (
     <Card className="border-border shadow-sm">
       <CardHeader className="pb-3 border-b border-border/60">
-        <div className="flex items-center gap-2">
-          <Activity className="h-4 w-4 text-primary" aria-hidden="true" />
-          <CardTitle className="text-sm font-bold tracking-tight">
-            {t("system_status_title")}
-          </CardTitle>
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-primary" aria-hidden="true" />
+            <CardTitle className="text-sm font-bold tracking-tight">
+              {t("system_status_title")}
+            </CardTitle>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-muted-foreground font-medium">Environment:</span>
+            <Badge variant={isDemo ? "warning" : "success"} className="text-[10px] font-bold uppercase tracking-wider">
+              {isDemo ? "DEMO WORKSPACE" : "PRODUCTION"}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-3">

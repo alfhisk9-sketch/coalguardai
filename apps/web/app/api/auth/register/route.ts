@@ -58,7 +58,8 @@ export async function POST(req: NextRequest) {
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const rawServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const serviceRoleKey = rawServiceKey ? rawServiceKey.replace(/^["']|["']$/g, "").trim() : null;
 
     if (!supabaseUrl || !serviceRoleKey) {
       return NextResponse.json(
@@ -72,13 +73,31 @@ export async function POST(req: NextRequest) {
     });
 
     // Validate role exists in roles table
-    const { data: roleRecord, error: roleError } = await adminClient
+    let roleRecord: { id: string; key: string; name: string } | null = null;
+    const { data: adminRoleRecord, error: roleError } = await adminClient
       .from("roles")
       .select("id, key, name")
       .eq("key", roleKey)
       .single();
 
-    if (roleError || !roleRecord) {
+    if (!roleError && adminRoleRecord) {
+      roleRecord = adminRoleRecord;
+    } else if (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      // Fallback to reading public roles table via anon client
+      try {
+        const anonClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+        const { data: anonRole } = await anonClient
+          .from("roles")
+          .select("id, key, name")
+          .eq("key", roleKey)
+          .single();
+        if (anonRole) roleRecord = anonRole;
+      } catch {
+        // Fallback failed
+      }
+    }
+
+    if (!roleRecord) {
       return NextResponse.json(
         { error: { code: "ROLE_NOT_FOUND", message: `Role '${roleKey}' could not be resolved in the statutory role registry.` } },
         { status: 400 }
