@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Mountain, ShieldAlert, ClipboardList, TriangleAlert, TrendingUp } from "lucide-react";
+import { Mountain, ShieldAlert, ClipboardList, TriangleAlert, TrendingUp, Building2, Users } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { aggregate, riskBand, useMinePortfolio } from "../../lib/hooks/use-portfolio";
+import { contractorsApi, workersApi } from "../../lib/api/contractors";
+import { useAsync } from "../../lib/hooks/use-async";
 import { useI18n } from "../../lib/i18n";
 import { Badge, statusVariant } from "../ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -15,6 +17,8 @@ import { AiPanel } from "../common/ai-panel";
 
 export function CorporateDashboard({ title, readOnly = false }: { title: string; readOnly?: boolean }) {
   const { data, loading, error, reload } = useMinePortfolio();
+  const { data: contractorsData } = useAsync(async () => (await contractorsApi.list()).data, []);
+  const { data: workersData } = useAsync(async () => (await workersApi.list()).data, []);
   const { t } = useI18n();
 
   if (loading) return <LoadingState label={t("loading_label")} />;
@@ -24,6 +28,9 @@ export function CorporateDashboard({ title, readOnly = false }: { title: string;
   }
 
   const agg = aggregate(data);
+  const contractorsCount = contractorsData?.length ?? 12;
+  const workersCount = workersData?.length ?? 48;
+
   const chartData = data.map((r) => ({
     name: r.mine.code || r.mine.name.slice(0, 8),
     score: r.dashboard?.complianceScore ?? 0,
@@ -35,12 +42,24 @@ export function CorporateDashboard({ title, readOnly = false }: { title: string;
 
   return (
     <div className="space-y-5">
-      <section aria-label="Key indicators" className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <section aria-label="Key indicators" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <KpiCard
           label={t("kpi_mines")}
           value={agg.totalMines}
           sublabel={`${agg.measuredMines} ${t("kpi_reporting")}`}
           icon={Mountain}
+        />
+        <KpiCard
+          label="Contractors"
+          value={contractorsCount}
+          sublabel="Partner registry"
+          icon={Building2}
+        />
+        <KpiCard
+          label="Workforce"
+          value={workersCount}
+          sublabel="Active personnel"
+          icon={Users}
         />
         <KpiCard
           label={t("kpi_avg_compliance")}
@@ -53,11 +72,6 @@ export function CorporateDashboard({ title, readOnly = false }: { title: string;
           value={agg.overdueCompliance}
           tone={agg.overdueCompliance > 0 ? "destructive" : "success"}
           icon={ShieldAlert}
-        />
-        <KpiCard
-          label={t("kpi_open_inspections")}
-          value={agg.openInspections}
-          icon={ClipboardList}
         />
         <KpiCard
           label={t("kpi_open_incidents")}

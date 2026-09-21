@@ -34,11 +34,11 @@ export interface MockWorker {
 }
 
 export const mockWorkers: MockWorker[] = [
-  { id: "w-1", fullName: "Ramesh Patil", contractorName: "Bharat Earthmovers Pvt Ltd", mineName: "Demo Mine North", category: "Heavy equipment operator", status: "ACTIVE" },
-  { id: "w-2", fullName: "Sunita Deshmukh", contractorName: "Bharat Earthmovers Pvt Ltd", mineName: "Demo Mine North", category: "Safety marshal", status: "ACTIVE" },
-  { id: "w-3", fullName: "Arun Kumar", contractorName: "Coalfield Logistics Co.", mineName: "Demo Mine North", category: "Haul truck driver", status: "ACTIVE" },
-  { id: "w-4", fullName: "Priya Nair", contractorName: "Coalfield Logistics Co.", mineName: "Demo Mine South", category: "Loader operator", status: "INACTIVE" },
-  { id: "w-5", fullName: "Imran Sheikh", contractorName: "Vindhya Drilling Services", mineName: "Demo Mine South", category: "Drill operator", status: "ACTIVE" },
+  { id: "w-1", fullName: "Ramesh Patil", contractorName: "Bharat Earthmovers Pvt Ltd", mineName: "Shakti Open Cast Mine", category: "Heavy equipment operator", status: "ACTIVE" },
+  { id: "w-2", fullName: "Sunita Deshmukh", contractorName: "Bharat Earthmovers Pvt Ltd", mineName: "Shakti Open Cast Mine", category: "Safety marshal", status: "ACTIVE" },
+  { id: "w-3", fullName: "Arun Kumar", contractorName: "Bharat Earthmovers Pvt Ltd", mineName: "Shakti Open Cast Mine", category: "Haul truck driver", status: "ACTIVE" },
+  { id: "w-4", fullName: "Priya Nair", contractorName: "Alpha Mining Services", mineName: "Vindhya Coal Mine", category: "Loader operator", status: "ACTIVE" },
+  { id: "w-5", fullName: "Imran Sheikh", contractorName: "Alpha Mining Services", mineName: "Vindhya Coal Mine", category: "Drill operator", status: "ACTIVE" },
 ];
 
 export interface MockAttendance {
@@ -59,10 +59,10 @@ export interface MockAttendance {
 const today = new Date().toISOString().slice(0, 10);
 
 export const mockAttendance: MockAttendance[] = [
-  { id: "a-1", workerName: "Ramesh Patil", contractorName: "Bharat Earthmovers Pvt Ltd", mineName: "Demo Mine North", attendanceDate: today, checkIn: `${today}T06:58:00Z`, checkOut: `${today}T15:04:00Z`, status: "PRESENT", latitude: 21.2514, longitude: 81.6296, source: "MOBILE_APP", syncStatus: "SYNCED" },
-  { id: "a-2", workerName: "Sunita Deshmukh", contractorName: "Bharat Earthmovers Pvt Ltd", mineName: "Demo Mine North", attendanceDate: today, checkIn: `${today}T07:02:00Z`, checkOut: null, status: "PRESENT", latitude: 21.2517, longitude: 81.6301, source: "MOBILE_APP", syncStatus: "PENDING" },
-  { id: "a-3", workerName: "Arun Kumar", contractorName: "Coalfield Logistics Co.", mineName: "Demo Mine North", attendanceDate: today, checkIn: null, checkOut: null, status: "ON_LEAVE", latitude: null, longitude: null, source: "WEB", syncStatus: "SYNCED" },
-  { id: "a-4", workerName: "Imran Sheikh", contractorName: "Vindhya Drilling Services", mineName: "Demo Mine South", attendanceDate: today, checkIn: `${today}T06:45:00Z`, checkOut: `${today}T11:30:00Z`, status: "HALF_DAY", latitude: 20.9412, longitude: 82.1104, source: "MOBILE_APP", syncStatus: "SYNCED" },
+  { id: "a-1", workerName: "Ramesh Patil", contractorName: "Bharat Earthmovers Pvt Ltd", mineName: "Shakti Open Cast Mine", attendanceDate: today, checkIn: `${today}T06:58:00Z`, checkOut: `${today}T15:04:00Z`, status: "PRESENT", latitude: 21.2514, longitude: 81.6296, source: "MOBILE_APP", syncStatus: "SYNCED" },
+  { id: "a-2", workerName: "Sunita Deshmukh", contractorName: "Bharat Earthmovers Pvt Ltd", mineName: "Shakti Open Cast Mine", attendanceDate: today, checkIn: `${today}T07:02:00Z`, checkOut: null, status: "PRESENT", latitude: 21.2517, longitude: 81.6301, source: "MOBILE_APP", syncStatus: "PENDING" },
+  { id: "a-3", workerName: "Arun Kumar", contractorName: "Bharat Earthmovers Pvt Ltd", mineName: "Shakti Open Cast Mine", attendanceDate: today, checkIn: null, checkOut: null, status: "ON_LEAVE", latitude: null, longitude: null, source: "WEB", syncStatus: "SYNCED" },
+  { id: "a-4", workerName: "Imran Sheikh", contractorName: "Alpha Mining Services", mineName: "Vindhya Coal Mine", attendanceDate: today, checkIn: `${today}T06:45:00Z`, checkOut: `${today}T11:30:00Z`, status: "HALF_DAY", latitude: 20.9412, longitude: 82.1104, source: "MOBILE_APP", syncStatus: "SYNCED" },
 ];
 
 export interface MockReading {
@@ -96,11 +96,11 @@ export interface MockProductionReport {
 }
 
 export const mockProduction: MockProductionReport[] = [
-  { id: "pr-1", mineName: "Demo Mine North", periodStart: "2026-04-01", periodEnd: "2026-04-30", targetQuantity: 42000, actualQuantity: 39850, unit: "tonnes", status: "APPROVED" },
-  { id: "pr-2", mineName: "Demo Mine North", periodStart: "2026-05-01", periodEnd: "2026-05-31", targetQuantity: 42000, actualQuantity: 43120, unit: "tonnes", status: "APPROVED" },
-  { id: "pr-3", mineName: "Demo Mine North", periodStart: "2026-06-01", periodEnd: "2026-06-30", targetQuantity: 44000, actualQuantity: 41005, unit: "tonnes", status: "APPROVED" },
-  { id: "pr-4", mineName: "Demo Mine North", periodStart: "2026-07-01", periodEnd: "2026-07-31", targetQuantity: 44000, actualQuantity: 45230, unit: "tonnes", status: "SUBMITTED" },
-  { id: "pr-5", mineName: "Demo Mine North", periodStart: "2026-08-01", periodEnd: "2026-08-31", targetQuantity: 45000, actualQuantity: 42980, unit: "tonnes", status: "DRAFT" },
+  { id: "pr-1", mineName: "Shakti Open Cast Mine", periodStart: "2026-04-01", periodEnd: "2026-04-30", targetQuantity: 42000, actualQuantity: 39850, unit: "tonnes", status: "APPROVED" },
+  { id: "pr-2", mineName: "Shakti Open Cast Mine", periodStart: "2026-05-01", periodEnd: "2026-05-31", targetQuantity: 42000, actualQuantity: 43120, unit: "tonnes", status: "APPROVED" },
+  { id: "pr-3", mineName: "Vindhya Coal Mine", periodStart: "2026-06-01", periodEnd: "2026-06-30", targetQuantity: 44000, actualQuantity: 41005, unit: "tonnes", status: "APPROVED" },
+  { id: "pr-4", mineName: "Satpura Coal Mine", periodStart: "2026-07-01", periodEnd: "2026-07-31", targetQuantity: 44000, actualQuantity: 45230, unit: "tonnes", status: "SUBMITTED" },
+  { id: "pr-5", mineName: "Damodar Open Cast Mine", periodStart: "2026-08-01", periodEnd: "2026-08-31", targetQuantity: 45000, actualQuantity: 42980, unit: "tonnes", status: "DRAFT" },
 ];
 
 export interface MockGrievance {

@@ -32,14 +32,34 @@ export async function listWorkersForContractor(ctx: AuthContext, db: Db, contrac
  * their own contractor record; a staff caller with contractors.view sees contractors at
  * mines in their scope. No schema, DTO, or Zod change.
  */
-export async function listContractors(ctx: AuthContext, db: Db, mineId: string): Promise<Contractor[]> {
-  assertMineAccess(ctx, mineId);
-  const all = await db.listContractorsByMine(mineId);
-  if (ctx.contractorId !== null && !ctx.permissions.includes("contractors.manage")) {
-    return all.filter((c) => c.id === ctx.contractorId);
+export async function listContractors(ctx: AuthContext, db: Db, mineId?: string): Promise<Contractor[]> {
+  if (mineId && mineId !== "ALL") {
+    assertMineAccess(ctx, mineId);
+    const all = await db.listContractorsByMine(mineId);
+    if (ctx.contractorId !== null && !ctx.permissions.includes("contractors.manage")) {
+      return all.filter((c) => c.id === ctx.contractorId);
+    }
+    assertPermission(ctx, "contractors.view");
+    return all;
   }
+
+  // Portfolio-wide list scoped to user's authorized mines
+  if (ctx.contractorId !== null && !ctx.permissions.includes("contractors.manage")) {
+    const own = await db.getContractor(ctx.contractorId);
+    return own ? [own] : [];
+  }
+
   assertPermission(ctx, "contractors.view");
-  return all;
+  const isGlobal = ctx.roles.some((r) => r.roleKey === "SUPER_ADMIN" || r.roleKey === "CORPORATE_ADMIN");
+  if (isGlobal) {
+    const allMines = await db.listMines("ALL");
+    const contractors = await Promise.all(allMines.map((m) => db.listContractorsByMine(m.id)));
+    return contractors.flat();
+  }
+
+  const mineIds = ctx.roles.map((r) => r.mineId).filter(Boolean) as string[];
+  const contractors = await Promise.all(mineIds.map((id) => db.listContractorsByMine(id)));
+  return contractors.flat();
 }
 
 function hasMineAccessSafe(ctx: AuthContext, mineId: string): boolean {

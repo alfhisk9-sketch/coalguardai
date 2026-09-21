@@ -71,7 +71,7 @@ export interface Db {
   getContractor(id: string): Promise<Contractor | null>;
   /** Account 2 minimal integration addition. */
   listContractorsByMine(mineId: string): Promise<Contractor[]>;
-  listContractorWorkers(contractorId: string): Promise<{ id: string; contractorId: string; fullName: string }[]>;
+  listContractorWorkers(contractorId: string): Promise<{ id: string; contractorId: string; fullName: string; idNumber?: string | null; roleTitle?: string | null }[]>;
 
   // documents
   createDocument(input: Omit<DocumentRecord, "id">): Promise<DocumentRecord>;

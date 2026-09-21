@@ -167,7 +167,13 @@ export class SupabaseDb implements Db {
   async listContractorWorkers(contractorId: string) {
     const { data, error } = await this.client.from("contractor_workers").select("*").eq("contractor_id", contractorId);
     if (error) throw error;
-    return (data ?? []).map((w: any) => ({ id: w.id, contractorId: w.contractor_id, fullName: w.full_name }));
+    return (data ?? []).map((w: any) => ({
+      id: w.id,
+      contractorId: w.contractor_id,
+      fullName: w.full_name,
+      idNumber: w.id_number,
+      roleTitle: w.role_title,
+    }));
   }
 
   async createDocument(input: Omit<DocumentRecord, "id">): Promise<DocumentRecord> {
@@ -222,5 +228,16 @@ function mapInspection(r: any): Inspection { return { id: r.id, mineId: r.mine_i
 function mapObservation(r: any): InspectionObservation { return { id: r.id, inspectionId: r.inspection_id, description: r.description, severity: r.severity, latitude: r.latitude, longitude: r.longitude, photoDocumentId: r.photo_document_id, clientOperationId: r.client_operation_id, clientCreatedAt: r.client_created_at, syncStatus: r.sync_status }; }
 function mapCorrectiveAction(r: any): CorrectiveAction { return { id: r.id, sourceType: r.source_type, sourceId: r.source_id, issue: r.issue, responsibleUserId: r.responsible_user_id, deadline: r.deadline, priority: r.priority, status: r.status }; }
 function mapIncident(r: any): Incident { return { id: r.id, mineId: r.mine_id, incidentTypeId: r.incident_type_id, occurredAt: r.occurred_at, latitude: r.latitude, longitude: r.longitude, description: r.description, severity: r.severity, status: r.status, clientOperationId: r.client_operation_id, clientCreatedAt: r.client_created_at, syncStatus: r.sync_status }; }
-function mapContractor(r: any): Contractor { return { id: r.id, mineId: r.mine_id, companyName: r.company_name, status: r.status }; }
+function mapContractor(r: any): Contractor {
+  return {
+    id: r.id,
+    mineId: r.mine_id,
+    companyName: r.company_name,
+    registrationNo: r.registration_no ?? undefined,
+    contactName: r.contact_name ?? undefined,
+    contactEmail: r.contact_email ?? undefined,
+    contactPhone: r.contact_phone ?? undefined,
+    status: r.status,
+  };
+}
 function mapDocument(r: any): DocumentRecord { return { id: r.id, mineId: r.mine_id, ownerType: r.owner_type, ownerId: r.owner_id, storagePath: r.storage_path, fileName: r.file_name, mimeType: r.mime_type, uploadedBy: r.uploaded_by }; }

@@ -374,6 +374,38 @@ describe("CoalGuard AI — Core Intelligence Suite", () => {
 
       expect(res.answer).toContain("Access Denied");
     });
+
+    it("grounds AI assistant with contractor and workforce dataset", async () => {
+      const { GeminiAIService } = await import("../lib/ai/gemini");
+      const geminiAi = new GeminiAIService(db);
+
+      // Seed contractors and workers in memory db
+      db.contractors.push(
+        { id: "c1", mineId: MINE_A, companyName: "Bharat Earthmovers Pvt Ltd", status: "ACTIVE" },
+        { id: "c2", mineId: MINE_B, companyName: "Satpura Safety Services", status: "ACTIVE" }
+      );
+      db.workers.push(
+        { id: "w1", contractorId: "c1", fullName: "Ramesh Patil" },
+        { id: "w2", contractorId: "c1", fullName: "Sunita Deshmukh" },
+        { id: "w3", contractorId: "c2", fullName: "Ravi Verma" }
+      );
+
+      const queries = [
+        "How many workers are assigned to Shakti Open Cast Mine?",
+        "Which contractors operate at Satpura Coal Mine?",
+        "Show inactive workers.",
+        "Which contractors have the most workers?",
+        "Show workers whose safety training is due.",
+        "Which mines have the largest contractor workforce?",
+        "Show contractors associated with Damodar Open Cast Mine."
+      ];
+
+      for (const q of queries) {
+        const res = await geminiAi.answerAssistantQuery({ query: q }, superAdmin);
+        // Verify that contractors source was added to context
+        expect(res.contextSources).toContain("contractors");
+      }
+    });
   });
 });
 
