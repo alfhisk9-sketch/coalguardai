@@ -48,6 +48,8 @@ export const geminiDocumentResponseSchema = z.object({
 
 export const geminiAssistantResponseSchema = z.object({
   answer: z.string(),
+  sourceIndicator: z.enum(["DATABASE-BACKED RESPONSE", "GENERAL REGULATORY GUIDANCE"]).optional(),
+  contextSources: z.array(z.string()).optional(),
 });
 
 export type GeminiRiskResponse = z.infer<typeof geminiRiskResponseSchema>;

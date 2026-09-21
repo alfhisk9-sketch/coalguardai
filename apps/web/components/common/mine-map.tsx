@@ -346,16 +346,22 @@ export function MineMap({
 
                   {/* Action Links */}
                   {p.kind === "MINE" && (
-                    <div className="pt-2 border-t border-border/80 grid grid-cols-2 gap-1.5">
+                    <div className="pt-2 border-t border-border/80 grid grid-cols-3 gap-1">
                       <a
                         href={`/mines/${p.id}`}
-                        className="block w-full text-center rounded bg-primary py-1 text-[10px] font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                        className="block w-full text-center rounded bg-primary py-1 px-1 text-[9px] font-bold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm truncate"
                       >
                         View Mine
                       </a>
                       <a
+                        href={`/compliance?mineId=${p.id}`}
+                        className="block w-full text-center rounded bg-secondary py-1 px-1 text-[9px] font-semibold text-secondary-foreground hover:bg-secondary/80 transition-colors border border-border/70 truncate"
+                      >
+                        Compliance
+                      </a>
+                      <a
                         href={`/inspections?mineId=${p.id}`}
-                        className="block w-full text-center rounded bg-secondary py-1 text-[10px] font-semibold text-secondary-foreground hover:bg-secondary/80 transition-colors border border-border/70"
+                        className="block w-full text-center rounded bg-secondary py-1 px-1 text-[9px] font-semibold text-secondary-foreground hover:bg-secondary/80 transition-colors border border-border/70 truncate"
                       >
                         Inspections
                       </a>

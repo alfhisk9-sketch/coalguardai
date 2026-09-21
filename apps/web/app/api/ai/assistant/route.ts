@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const db = new SupabaseDb(getSupabaseServerClient());
     const ai = getAIService(db);
 
-    const result = await ai.answerAssistantQuery(body);
+    const result = await ai.answerAssistantQuery(body, ctx);
 
     return NextResponse.json({ data: result });
 

@@ -16,7 +16,19 @@ export interface Mine {
   mineType: "OPEN_CAST" | "UNDERGROUND" | "MIXED";
   latitude: number | null;
   longitude: number | null;
-  status: "ACTIVE" | "INACTIVE";
+  status: "ACTIVE" | "INACTIVE" | "UNDER_INSPECTION" | "SUSPENDED";
+  operator?: string;
+  state?: string;
+  district?: string;
+  targetProduction?: number;
+  actualProduction?: number;
+  workerCount?: number;
+  incidentCount?: number;
+  complianceScore?: number;
+  riskBand?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  environmentalStatus?: "NORMAL" | "WARNING" | "CRITICAL";
+  lastInspection?: string;
+  isDemo?: boolean;
 }
 
 export interface UserRoleAssignment {
@@ -53,6 +65,7 @@ export interface ComplianceRecord {
   completedDate: string | null;
   status: "COMPLIANT" | "DUE_SOON" | "OVERDUE" | "NON_COMPLIANT" | "UNDER_REVIEW" | "NOT_APPLICABLE";
   notes: string | null;
+  isDemo?: boolean;
 }
 
 // Base shape shared by every offline-syncable entity (DATABASE.md 7b / MOBILE_SPEC.md).
@@ -72,7 +85,12 @@ export interface Inspection extends SyncableFields {
   actualDate: string | null;
   latitude: number | null;
   longitude: number | null;
-  status: "SCHEDULED" | "IN_PROGRESS" | "SUBMITTED" | "REVIEWED" | "APPROVED" | "REJECTED";
+  status: "SCHEDULED" | "IN_PROGRESS" | "SUBMITTED" | "REVIEWED" | "APPROVED" | "REJECTED" | "OVERDUE" | "COMPLETED";
+  score?: number;
+  findingsCount?: number;
+  criticalFindings?: number;
+  notes?: string;
+  isDemo?: boolean;
 }
 
 export interface InspectionObservation extends SyncableFields {
@@ -83,6 +101,7 @@ export interface InspectionObservation extends SyncableFields {
   latitude: number | null;
   longitude: number | null;
   photoDocumentId: string | null;
+  isDemo?: boolean;
 }
 
 export interface Incident extends SyncableFields {
@@ -92,16 +111,46 @@ export interface Incident extends SyncableFields {
   occurredAt: string;
   latitude: number | null;
   longitude: number | null;
+  title?: string;
   description: string;
   severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
-  status: "REPORTED" | "UNDER_INVESTIGATION" | "RESOLVED" | "CLOSED";
+  status: "REPORTED" | "UNDER_INVESTIGATION" | "RESOLVED" | "CLOSED" | "OPEN" | "ACTION_REQUIRED";
+  reportedBy?: string;
+  rootCause?: string;
+  correctiveAction?: string;
+  resolvedAt?: string | null;
+  isDemo?: boolean;
 }
 
 export interface Contractor {
   id: string;
   mineId: string;
   companyName: string;
+  registrationNo?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  workerCount?: number;
+  activeWorkers?: number;
+  complianceScore?: number;
   status: "ACTIVE" | "SUSPENDED" | "TERMINATED";
+  isDemo?: boolean;
+}
+
+export interface Worker {
+  id: string;
+  workerId: string;
+  contractorId: string;
+  mineId: string;
+  fullName: string;
+  role: string;
+  department: string;
+  status: "ACTIVE" | "ON_LEAVE" | "TERMINATED";
+  joiningDate: string;
+  trainingStatus: "COMPLIANT" | "PENDING_REFRESHER" | "OVERDUE";
+  lastMedicalDate?: string;
+  attendancePercentage?: number;
+  isDemo?: boolean;
 }
 
 export interface CorrectiveAction {
@@ -113,6 +162,52 @@ export interface CorrectiveAction {
   deadline: string | null;
   priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   status: "OPEN" | "IN_PROGRESS" | "COMPLETED" | "VERIFIED" | "OVERDUE";
+  isDemo?: boolean;
+}
+
+export interface EnvironmentalReading {
+  id: string;
+  monitoringPointId: string;
+  parameterType: "AIR_QUALITY" | "DUST" | "WATER" | "NOISE" | "LAND" | "PM25" | "PM10" | "AQI";
+  value: number;
+  unit: string;
+  thresholdValue: number;
+  status: "NORMAL" | "WARNING" | "CRITICAL" | "EXCEEDED";
+  recordedAt: string;
+  isDemo?: boolean;
+}
+
+export interface ProductionRecord {
+  id: string;
+  mineId: string;
+  periodStart: string;
+  periodEnd: string;
+  targetQuantity: number;
+  actualQuantity: number;
+  unit: string;
+  varianceTonnes?: number;
+  status: "DRAFT" | "SUBMITTED" | "APPROVED";
+  isDemo?: boolean;
+}
+
+export interface AISession {
+  id: string;
+  userId: string;
+  mineId?: string | null;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AIMessage {
+  id: string;
+  sessionId: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  contextSources?: string[];
+  isGrounded?: boolean;
+  modelVersion?: string;
+  createdAt: string;
 }
 
 // --- AI interface DTOs (AI_SPEC.md) ---
@@ -134,7 +229,13 @@ export interface MineSummaryResult { summary: string; isSimulated: boolean; mode
 export interface DocumentAnalysisInput { documentId: string; }
 export interface DocumentAnalysisResult { extractedText: string; classification: string | null; isSimulated: boolean; modelVersion: string; }
 export interface AssistantQueryInput { query: string; mineId?: string; }
-export interface AssistantQueryResult { answer: string; isSimulated: boolean; modelVersion: string; }
+export interface AssistantQueryResult {
+  answer: string;
+  isSimulated: boolean;
+  modelVersion: string;
+  sourceIndicator?: "DATABASE_BACKED" | "REGULATORY_GUIDANCE";
+  contextSources?: string[];
+}
 
 export interface AIService {
   analyzeComplianceRisk(input: ComplianceRiskInput): Promise<ComplianceRiskResult>;
@@ -142,7 +243,7 @@ export interface AIService {
   detectAnomaly(input: AnomalyDetectionInput): Promise<AnomalyDetectionResult>;
   summarizeMine(input: MineSummaryInput): Promise<MineSummaryResult>;
   analyzeDocument(input: DocumentAnalysisInput): Promise<DocumentAnalysisResult>;
-  answerAssistantQuery(input: AssistantQueryInput): Promise<AssistantQueryResult>;
+  answerAssistantQuery(input: AssistantQueryInput, ctx?: AuthContext): Promise<AssistantQueryResult>;
 }
 
 export interface OCRService {

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, UserPlus, LogIn, CheckCircle2 } from "lucide-react";
 import type { RoleKey } from "@sih/config";
@@ -167,11 +168,28 @@ export default function LoginPage() {
           <LanguageSelector />
         </div>
 
-        <div className="mb-6 flex flex-col items-center gap-2 text-center">
-          <CoalGuardIcon className="h-12 w-12 drop-shadow-md" ariaHidden={false} />
-          <h1 className="text-lg font-bold tracking-tight text-foreground">{t("app_title")}</h1>
-          <p className="text-xs text-muted-foreground">{t("app_subtitle")}</p>
-          <p className="text-[11px] font-semibold text-primary">{t("ministry_label")}</p>
+        <div className="mb-6 flex flex-col items-center gap-3 text-center">
+          <div className="relative h-20 w-20 overflow-hidden drop-shadow-md">
+            <Image
+              src="/branding/coalguard-logo.png"
+              alt="CoalGuard AI Official Brand Logo"
+              width={80}
+              height={80}
+              priority
+              className="h-full w-full object-contain"
+            />
+          </div>
+          <div>
+            <h1 className="text-xl font-extrabold tracking-tight text-foreground">
+              CoalGuard <span className="text-amber-500">AI</span>
+            </h1>
+            <p className="text-xs font-semibold text-muted-foreground mt-0.5 tracking-wide uppercase">
+              Safer Mines — Smarter Governance
+            </p>
+            <p className="text-[11px] font-medium text-primary/80 mt-1">
+              Ministry of Coal / Coal India Limited
+            </p>
+          </div>
         </div>
 
         <Card className="border-border shadow-md">

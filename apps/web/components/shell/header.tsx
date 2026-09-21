@@ -77,6 +77,11 @@ export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
           <span className="font-semibold text-foreground/80">CoalGuard AI</span>
           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" aria-hidden="true" />
           <span className="font-medium text-foreground">{pageTitle}</span>
+          {isDemo ? (
+            <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold tracking-wider text-amber-500 uppercase">
+              DEMO ENVIRONMENT
+            </span>
+          ) : null}
         </div>
       </div>
 
