@@ -48,7 +48,19 @@ export const geminiDocumentResponseSchema = z.object({
 
 export const geminiAssistantResponseSchema = z.object({
   answer: z.string(),
-  sourceIndicator: z.enum(["DATABASE-BACKED RESPONSE", "GENERAL REGULATORY GUIDANCE"]).optional(),
+  sources: z
+    .array(
+      z.object({
+        type: z.string(),
+        id: z.string().optional(),
+        label: z.string(),
+      })
+    )
+    .optional(),
+  grounded: z.boolean().optional(),
+  provider: z.string().optional(),
+  model: z.string().optional(),
+  sourceIndicator: z.enum(["DATABASE-BACKED RESPONSE", "GENERAL REGULATORY GUIDANCE", "DATABASE_BACKED", "REGULATORY_GUIDANCE"]).optional(),
   contextSources: z.array(z.string()).optional(),
 });
 

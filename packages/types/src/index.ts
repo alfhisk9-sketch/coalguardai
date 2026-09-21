@@ -228,9 +228,19 @@ export interface MineSummaryInput { mineId: string; }
 export interface MineSummaryResult { summary: string; isSimulated: boolean; modelVersion: string; }
 export interface DocumentAnalysisInput { documentId: string; }
 export interface DocumentAnalysisResult { extractedText: string; classification: string | null; isSimulated: boolean; modelVersion: string; }
+export interface AISourceItem {
+  type: string;
+  id?: string;
+  label: string;
+}
+
 export interface AssistantQueryInput { query: string; mineId?: string; }
 export interface AssistantQueryResult {
   answer: string;
+  sources?: AISourceItem[];
+  grounded?: boolean;
+  provider?: "gemini" | "unavailable";
+  model?: string;
   isSimulated: boolean;
   modelVersion: string;
   sourceIndicator?: "DATABASE_BACKED" | "REGULATORY_GUIDANCE";
