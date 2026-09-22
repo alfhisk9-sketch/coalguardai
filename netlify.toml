@@ -1,4 +1,6 @@
-# Netlify configuration for Next.js 14 App Router
+# Netlify configuration for CoalGuard AI
+# Next.js 14 App Router
+
 [build]
   command = "npm run build --workspace=apps/web"
   publish = "apps/web/.next"
@@ -7,7 +9,7 @@
   package = "@netlify/plugin-nextjs"
 
 [build.environment]
-  NODE_VERSION = "20.14.0"
+  NODE_VERSION = "22"
 
 [[headers]]
   for = "/*"
@@ -16,8 +18,3 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=(self)"
-
-[[redirects]]
-  from = "/api/*"
-  to = "/api/:splat"
-  status = 200
